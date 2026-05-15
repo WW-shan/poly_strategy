@@ -204,6 +204,41 @@ class WatchlistTests(unittest.TestCase):
         signal = next(row for row in rows if row["market_id"] == "signal")
         self.assertIn("external_signal", signal["priority_reasons"])
 
+    def test_build_polymarket_watchlist_cap_prefers_latest_external_signal(self):
+        gamma_rows = [
+            _gamma_row("old-signal", "", ["old-yes", "old-no"], "", liquidity=0, volume24hr=0),
+            _gamma_row("new-signal", "", ["new-yes", "new-no"], "", liquidity=0, volume24hr=0),
+            _gamma_row("top", "", ["top-yes", "top-no"], "", liquidity=1000, volume24hr=1000),
+        ]
+        rules = {"mutually_exclusive": []}
+        old_signal = {
+            "type": "external_signal",
+            "legs": [{"venue": "polymarket", "market_id": "old-signal"}],
+        }
+        new_signal = {
+            "type": "external_signal",
+            "legs": [{"venue": "polymarket", "market_id": "new-signal"}],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            gamma_path = Path(tmp) / "gamma.ndjson"
+            rules_path = Path(tmp) / "rules.json"
+            signals_path = Path(tmp) / "signals.ndjson"
+            gamma_path.write_text("\n".join(json.dumps(row) for row in gamma_rows) + "\n")
+            rules_path.write_text(json.dumps(rules))
+            signals_path.write_text("\n".join(json.dumps(row) for row in [old_signal, old_signal, old_signal, new_signal]) + "\n")
+
+            rows = build_polymarket_watchlist(
+                gamma_path,
+                rules_path,
+                external_signals_path=signals_path,
+                include_top_markets=1,
+                max_markets=1,
+            )
+
+        self.assertIn("new-signal", {row["market_id"] for row in rows})
+        self.assertNotIn("old-signal", {row["market_id"] for row in rows})
+
     def test_build_polymarket_watchlist_keeps_external_signal_neg_risk_group_atomic(self):
         gamma_rows = [
             _gamma_row("group-a", "group", ["ga-yes", "ga-no"], "1", liquidity=100, volume24hr=10),

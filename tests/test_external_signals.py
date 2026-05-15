@@ -213,6 +213,23 @@ class ExternalSignalTests(unittest.TestCase):
 
         self.assertEqual(market_ids, ["pm-1", "pm-2"])
 
+    def test_polymarket_market_ids_from_external_signals_limit_prefers_latest_unique_ids(self):
+        rows = [
+            {"type": "external_signal", "legs": [{"venue": "polymarket", "market_id": "old-1"}]},
+            {"type": "external_signal", "legs": [{"venue": "polymarket", "market_id": "old-2"}]},
+            {"type": "external_signal", "legs": [{"venue": "polymarket", "market_id": "new-1"}]},
+            {"type": "external_signal", "legs": [{"venue": "polymarket", "market_id": "old-1"}]},
+            {"type": "external_signal", "legs": [{"venue": "polymarket", "market_id": "new-2"}]},
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "external.ndjson"
+            path.write_text("\n".join(json.dumps(row) for row in rows) + "\n")
+
+            market_ids = polymarket_market_ids_from_external_signals(path, limit=3)
+
+        self.assertEqual(market_ids, ["new-2", "old-1", "new-1"])
+
 
 if __name__ == "__main__":
     unittest.main()

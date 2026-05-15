@@ -264,30 +264,34 @@ def _top_neg_risk_group_market_ids(
 
 
 def _external_signal_market_scores(path: Optional[Path], alias_to_market_id: Optional[dict] = None) -> Counter:
-    scores = Counter()
+    scores = {}
     if not path or not path.exists():
-        return scores
+        return Counter()
     alias_to_market_id = alias_to_market_id or {}
+    rows = []
     with path.open() as handle:
         for raw_line in handle:
             line = raw_line.strip()
             if not line:
                 continue
             try:
-                row = json.loads(line)
+                rows.append(json.loads(line))
             except json.JSONDecodeError:
                 continue
-            if row.get("type") != "external_signal":
+    for index, row in enumerate(rows):
+        signal_score = 100_000.0 + 10_000.0 * float(row.get("quoted_edge") or 0.0) + float(index)
+        if row.get("type") != "external_signal":
+            continue
+        for leg in row.get("legs", []):
+            if str(leg.get("venue") or "").lower() != "polymarket":
                 continue
-            signal_score = 100_000.0 + 10_000.0 * float(row.get("quoted_edge") or 0.0)
-            for leg in row.get("legs", []):
-                if str(leg.get("venue") or "").lower() != "polymarket":
-                    continue
-                raw_market_id = str(leg.get("market_id") or "").strip()
-                market_id = alias_to_market_id.get(raw_market_id, raw_market_id)
-                if market_id:
-                    scores[market_id] += signal_score
-    return scores
+            raw_market_id = str(leg.get("market_id") or "").strip()
+            market_id = alias_to_market_id.get(raw_market_id, raw_market_id)
+            if market_id:
+                current = scores.get(market_id)
+                if current is None or signal_score > current:
+                    scores[market_id] = signal_score
+    return Counter(scores)
 
 
 def _canonicalize_market_ids(market_ids: Iterable[str], alias_to_market_id: dict) -> set:

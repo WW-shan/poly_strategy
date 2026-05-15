@@ -70,7 +70,9 @@ def polymarket_market_ids_from_external_signals(path: Path, limit: Optional[int]
         raise ValueError("limit must be at least 1")
     market_ids = []
     seen = set()
-    for row in _read_external_signals(path):
+    rows = list(_read_external_signals(path))
+    iterable = reversed(rows) if limit is not None else rows
+    for row in iterable:
         for leg in row.get("legs", []):
             if str(leg.get("venue") or "").lower() != "polymarket":
                 continue
