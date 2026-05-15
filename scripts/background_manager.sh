@@ -269,7 +269,12 @@ case "$COMMAND" in
       fi
 
       if [[ "$ENABLE_EXTERNAL_SIGNALS" == "1" && "$now" -ge "$next_external" ]]; then
+        before_sig="$(file_sig "$WATCHLIST")"
         run_logged external-signals scripts/refresh_external_signals.sh
+        after_sig="$(file_sig "$WATCHLIST")"
+        if [[ "$before_sig" != "$after_sig" ]]; then
+          restart_monitor
+        fi
         next_external=$((now + EXTERNAL_SIGNALS_INTERVAL))
       fi
 
