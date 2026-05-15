@@ -206,11 +206,12 @@ scripts/run_realtime_monitor.sh
 
 The script rebuilds `data/watchlist-current.json`, uses `.venv/bin/python`, reconnects on stale WebSocket feeds, and does not write raw update rows unless `UPDATES_OUT=...` is set.
 
-Current macOS launchd form:
+For the managed local loop, use the background manager:
 
 ```bash
-launchctl submit -l poly_strategy_realtime_monitor_24h -- /bin/zsh -lc \
-  'cd /Users/ww/Project/poly_strategy && PYTHONUNBUFFERED=1 REPORT_OUT=data/realtime-monitor-24h-v1.jsonl SNAPSHOTS_OUT=data/realtime-monitor-24h-v1-snapshots.ndjson SNAPSHOT_INTERVAL=2 STALE_TIMEOUT=30 RECONNECT_DELAY=2 MIN_NET_EDGE=0.002 MAX_CAPITAL_PER_TRADE=10 BANKROLL=50 MIN_PAPER_ROI=0.01 MIN_RUN_OBSERVATIONS=2 MIN_RUN_SECONDS=3 scripts/run_realtime_monitor.sh > data/realtime-monitor-24h-v1.log 2>&1'
+scripts/background_manager.sh start
+scripts/background_manager.sh status
+scripts/background_manager.sh stop
 ```
 
 Extract standardized alert rows from the latest monitor iteration:
@@ -225,11 +226,12 @@ python3 -m poly_strategy.cli monitor-alerts data/realtime-monitor.jsonl \
 
 `monitor-alerts` reads either `paper-monitor` or `realtime-monitor-watchlist` reports and emits `opportunity_alert` JSONL rows from the latest stable paper trades. Add `--include-current` if you also want non-paper-selected current opportunities for diagnostics or notifications.
 
-For the current realtime run, a 60 second alert loop can be started with:
+For the current realtime run, the background manager runs the alert pass every 60 seconds by default:
 
 ```bash
-launchctl submit -l poly_strategy_realtime_alerts_60s -- /bin/zsh -lc \
-  'cd /Users/ww/Project/poly_strategy && while true; do PYTHONUNBUFFERED=1 scripts/run_monitor_alerts_once.sh >> data/realtime-monitor-24h-v1-alerts.log 2>&1; sleep 60; done'
+scripts/background_manager.sh start
+scripts/background_manager.sh status
+scripts/background_manager.sh tail
 ```
 
 Watch those markets repeatedly and replay opportunities:
@@ -498,7 +500,7 @@ Run a realtime-specific analysis report explaining why opportunities are absent 
 ```
 
 The `zero_opportunity_diagnosis` section separates actionable near-misses from diagnostic or blocked candidates, so a positive-looking basket that still needs rule promotion will not be treated as executable.
-The same report is refreshed by `scripts/run_realtime_analysis_once.sh`; the LaunchAgent `poly_strategy_realtime_analysis_15m` runs it every 15 minutes.
+The same report is refreshed by `scripts/run_realtime_analysis_once.sh`; the background manager runs it every 15 minutes by default.
 
 Extract markets from a specific optimization lever and run a focused maker-fee scan:
 
@@ -545,14 +547,7 @@ Send alerts to notification sinks. The script reads `ALERT_WEBHOOK_URL`, `TELEGR
 DRY_RUN=1 ALERT_WEBHOOK_URL=https://example.test/hook scripts/run_notify_alerts_once.sh
 ```
 
-Install persistent macOS LaunchAgents for realtime monitoring, alert extraction, discovery refresh, external signal refresh, alert execution dry-run, and notifications:
-
-```bash
-DRY_RUN=1 scripts/install_launch_agents.sh   # preview
-scripts/install_launch_agents.sh             # install and bootstrap
-```
-
-Oddpool Free is quota-limited. The included external signal LaunchAgent refreshes hourly by default to stay within the 1000 requests/month budget.
+Oddpool Free is quota-limited. The background manager refreshes external signals hourly by default to stay within the 1000 requests/month budget.
 
 Rotate large snapshot/update/log files while preserving report JSONL by default:
 

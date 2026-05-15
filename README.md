@@ -34,7 +34,7 @@ Live execution is opt-in and stays behind explicit environment variables, pretra
 | Discovery | deterministic relation mining, LLM verification, rule caching |
 | Realtime | watchlist building, live book streaming, stable-opportunity monitoring |
 | Paper and risk | backtest, paper selection, execution plan checks, risk ledger updates |
-| Operations | background manager, LaunchAgents, rotation and pruning helpers |
+| Operations | background manager, rotation and pruning helpers |
 
 ## Architecture
 
@@ -105,7 +105,6 @@ Start from [.env.example](.env.example) and keep `.env.local` untracked.
 - `tests/`: unit tests
 - `docs/`: architecture, operations, and command reference
 - `rules/`: cached semantic rules
-- `ops/launchd/`: macOS LaunchAgent templates
 - `data/` and `var/`: local runtime state, ignored by git
 
 ## Release and license

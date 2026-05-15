@@ -13,7 +13,7 @@ Build a safe, fully automated dry-run research/trading loop that can discover mo
 - Alert extraction exists and writes NDJSON with cooldown state.
 - Execution planning exists as dry-run only by default.
 - External signal normalization exists for manually supplied scanner payloads.
-- Persistent LaunchAgent templates now exist under `ops/launchd/`; install them with `scripts/install_launch_agents.sh`.
+- Persistent local orchestration runs through `scripts/background_manager.sh`, which starts the manager in tmux when tmux is available.
 
 ## Critical Gap Checklist
 
@@ -24,7 +24,7 @@ Build a safe, fully automated dry-run research/trading loop that can discover mo
   - [x] Cross-platform matches must be semantic-verified before they can become actionable dry-run signals.
   - [x] Kalshi/Polymarket cross-platform output must stop hardcoding executable YES/NO legs for unverified matches.
   - [x] Execution must write live-attempt/reconciliation state into the risk ledger after real submissions.
-  - [x] Data rotation must run as a persistent LaunchAgent, not only as a manual script.
+  - [x] Data rotation must run inside the persistent background manager, not only as a manual script.
   - [x] Rule discovery must broaden beyond deterministic neg-risk pairs with topic clustering and safer non-neg-risk candidates.
 - [x] Expand opportunity coverage beyond the current small watchlist.
   - [x] Rank high-liquidity/high-relevance Polymarket markets.
@@ -62,14 +62,14 @@ Build a safe, fully automated dry-run research/trading loop that can discover mo
   - [x] Retain reports and alert logs.
   - [x] Guard against disk exhaustion.
 - [x] Background production data maintenance.
-  - [x] Add a persistent macOS LaunchAgent for `scripts/rotate_data.sh`.
-  - [x] Install/reload it with the existing LaunchAgent installer.
+  - [x] Run `scripts/rotate_data.sh` from the persistent background manager.
+  - [x] Start/restart it through the tmux-backed manager script.
   - [x] Smoke-test rotation in dry-run mode and rotate current oversized snapshot data.
-- [x] Convert background jobs to persistent LaunchAgents.
-  - [x] Realtime monitor plist.
-  - [x] Alert loop plist.
-  - [x] Optional discovery refresh plist.
-  - [x] Install/reload helper script.
+- [x] Convert background jobs to persistent local manager tasks.
+  - [x] Realtime monitor task.
+  - [x] Alert loop task.
+  - [x] Optional discovery refresh task.
+  - [x] Start/restart/status helper script.
 - [x] Build cross-platform/Kalshi framework.
   - [x] Kalshi market collector.
   - [x] Kalshi orderbook parser/collector.

@@ -11,7 +11,6 @@ cp .env.example .env.local
 ## Background jobs
 
 - `scripts/background_manager.sh start|status|stop` manages the local monitor loop.
-- `scripts/install_launch_agents.sh` installs the persistent macOS LaunchAgent templates.
 - `scripts/rotate_data.sh`, `scripts/prune_data_artifacts.sh`, and `scripts/compact_data_caches.sh` keep runtime data bounded.
 
 ## Runtime locations
@@ -26,4 +25,3 @@ cp .env.example .env.local
 2. Keep `data/` and `var/` out of the repository.
 3. Run the test suite before pushing.
 4. Avoid committing generated market data unless you explicitly want it tracked.
-

@@ -69,23 +69,6 @@ stop_pid() {
   kill -KILL "$pid" >/dev/null 2>&1 || true
 }
 
-remove_legacy_launchd() {
-  local domain
-  domain="gui/$(id -u)"
-  for plist in "$HOME"/Library/LaunchAgents/poly_strategy*.plist; do
-    [[ -e "$plist" ]] || continue
-    local label
-    label="$(/usr/libexec/PlistBuddy -c 'Print :Label' "$plist" 2>/dev/null || basename "$plist" .plist)"
-    launchctl bootout "$domain" "$plist" >/dev/null 2>&1 || true
-    launchctl remove "$label" >/dev/null 2>&1 || true
-    rm -f "$plist"
-  done
-  launchctl list | awk '/poly_strategy/ {print $3}' | while read -r label; do
-    [[ -n "$label" && "$label" != "-" ]] || continue
-    launchctl remove "$label" >/dev/null 2>&1 || true
-  done
-}
-
 run_logged() {
   local name="$1"
   shift
@@ -194,7 +177,6 @@ case "$COMMAND" in
       echo "background_running pid=$existing"
       exit 0
     fi
-    remove_legacy_launchd
     start_supervisor_detached
     sleep 1
     "$0" status
@@ -382,7 +364,6 @@ case "$COMMAND" in
     ;;
   stop)
     stop_manager
-    remove_legacy_launchd
     if tmux_available; then
       tmux kill-session -t "$TMUX_SESSION" >/dev/null 2>&1 || true
     fi
@@ -405,16 +386,11 @@ case "$COMMAND" in
     else
       echo "monitor=stopped"
     fi
-    echo "launchd_matches:"
-    launchctl list | awk '/poly_strategy/ {print $0}' || true
-    ;;
-  clean-legacy-launchd)
-    stop_manager
-    remove_legacy_launchd
-    echo "launchd_matches:"
-    launchctl list | awk '/poly_strategy/ {print $0}' || true
-    echo "launchagent_plists:"
-    find "$HOME/Library/LaunchAgents" -maxdepth 1 -name 'poly_strategy*.plist' -print 2>/dev/null || true
+    if tmux_available && tmux has-session -t "$TMUX_SESSION" >/dev/null 2>&1; then
+      echo "tmux_session=running name=$TMUX_SESSION"
+    else
+      echo "tmux_session=stopped name=$TMUX_SESSION"
+    fi
     ;;
   tail)
     if tmux_available && tmux has-session -t "$TMUX_SESSION" >/dev/null 2>&1; then
@@ -423,7 +399,7 @@ case "$COMMAND" in
     tail -n "${TAIL_LINES:-120}" -f "$SUPERVISOR_LOG"
     ;;
   *)
-    echo "usage: $0 {start|stop|restart|status|tail|clean-legacy-launchd}" >&2
+    echo "usage: $0 {start|stop|restart|status|tail}" >&2
     exit 2
     ;;
 esac
