@@ -34,3 +34,7 @@ var/
 *.log
 
 .deepseek/
+
+# OCR POC cache (downloaded PDFs)
+docs/ocr_poc/cache/
+docs/ocr_poc/result_*.json
