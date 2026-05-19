@@ -1,0 +1,30 @@
+{
+  "source_pdf": "fr_2026-09841.pdf",
+  "ground_truth": {
+    "chars": 3084,
+    "words": 154
+  },
+  "scan_only_pdf": "scan_2026-09841.pdf",
+  "pypdf_on_scan_only": {
+    "chars": 1,
+    "recall_vs_gt": {
+      "recall": 0.0,
+      "intersect": 0,
+      "gt_words": 154,
+      "candidate_words": 0,
+      "candidate_chars": 1
+    },
+    "first_200_chars": "\n"
+  },
+  "tesseract_on_scan_only": {
+    "chars": 2976,
+    "recall_vs_gt": {
+      "recall": 0.987,
+      "intersect": 152,
+      "gt_words": 154,
+      "candidate_words": 152,
+      "candidate_chars": 2976
+    },
+    "first_200_chars": "This document is scheduled to be published in the\nFederal Register on 2026-05-18 and available online at\n\nhttps://www.federalregister.gov/d/2026-09841, and on\nhttps://govinfo.gov\n\nAgency for Healthcar"
+  }
+}
